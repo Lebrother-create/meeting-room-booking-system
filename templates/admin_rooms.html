@@ -1,0 +1,33 @@
+{% extends "layout.html" %}
+{% block content %}
+<h3 class="mb-3">Manage Rooms</h3>
+
+<form method="POST" action="{{ url_for('admin_add_room') }}" class="d-flex gap-2 mb-3">
+  <input name="name" class="form-control" placeholder="Enter new room name" required>
+  <button class="btn btn-success">Add Room</button>
+</form>
+
+<table class="table table-striped align-middle">
+  <thead><tr><th>ID</th><th>Room Name</th><th>Actions</th></tr></thead>
+  <tbody>
+    {% for r in rooms %}
+    <tr>
+      <td>{{ r['id'] }}</td>
+      <td>
+        <form method="POST" action="{{ url_for('admin_edit_room', room_id=r['id']) }}" class="d-flex gap-2">
+          <input name="name" value="{{ r['name'] }}" class="form-control">
+          <button class="btn btn-primary btn-sm">Rename</button>
+        </form>
+      </td>
+      <td>
+        <form method="POST" action="{{ url_for('admin_delete_room', room_id=r['id']) }}" style="display:inline;">
+  <button class="btn btn-primary btn-sm">Delete</button>
+</form>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="3" class="text-muted">No rooms found.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

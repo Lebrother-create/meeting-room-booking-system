@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Meeting Room Booking System</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <!-- Custom Theme -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<!-- Admin State Flag (used by reminder pop-up logic) -->
+<script>
+  window.IS_ADMIN = {{ 'true' if session.get('is_admin') else 'false' }};
+</script>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg px-4 py-2">
+  <a class="navbar-brand d-flex align-items-center" href="{{ url_for('index') }}">
+    <i class="fa-solid fa-calendar-days me-2 brand-icon"></i>
+    Meeting Room Booking System
+  </a>
+
+  <div class="ms-auto d-flex gap-2">
+    {% if session.get('is_admin') %}
+      <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary btn-sm">Dashboard</a>
+      <a href="{{ url_for('admin_rooms') }}" class="btn btn-outline-secondary btn-sm">Rooms</a>
+      <a href="{{ url_for('admin_history') }}" class="btn btn-outline-secondary btn-sm">History</a>
+      <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-danger btn-sm">Logout</a>
+    {% else %}
+      <a href="{{ url_for('admin_login') }}" class="btn btn-outline-secondary btn-sm">Admin Login</a>
+    {% endif %}
+  </div>
+</nav>
+
+
+<!-- FLASH MESSAGES -->
+<div class="container mt-3">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+</div>
+
+
+<!-- PAGE CONTENT -->
+<div class="container py-4">
+  {% block content %}{% endblock %}
+</div>
+
+
+<!-- ADMIN REMINDER TOAST -->
+<div class="position-fixed top-0 end-0 p-3" style="z-index: 1080;">
+  <div id="adminToast" class="toast align-items-center text-bg-light border-0" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+      <div class="toast-body fw-semibold" id="adminToastMsg"></div>
+      <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Bootstrap JS Bundle (Required for modal, toast, dropdowns) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+{# page-specific scripts from child templates (e.g., index.html) #}
+{% block scripts %}{% endblock %}
+
+
+<!-- ADMIN REMINDER LOGIC -->
+<script>
+(function(){
+  if (!window.IS_ADMIN) return;
+
+  const toastEl   = document.getElementById('adminToast');
+  const toastBody = document.getElementById('adminToastMsg');
+  const toast     = new bootstrap.Toast(toastEl, { delay: 6000 });
+
+  const shown = new Set();
+
+  async function checkAlerts(){
+    try {
+      const response = await fetch('/api/admin/alerts', { cache: 'no-store' });
+      const data = await response.json();
+      if (!data.ok) return;
+
+      for (const alert of data.alerts) {
+        if (!shown.has(alert.id)) {
+          shown.add(alert.id);
+          toastBody.textContent = alert.msg;
+          toast.show();
+          break;
+        }
+      }
+    } catch (err) {
+      console.warn('Admin reminder check failed:', err);
+    }
+  }
+
+  checkAlerts();              // Run at page load
+  setInterval(checkAlerts, 60000); // Then every 60 sec
+})();
+</script>
+
+</body>
+</html>

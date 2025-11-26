@@ -1,0 +1,57 @@
+{% extends "layout.html" %}
+{% block content %}
+<h3>Edit Booking</h3>
+<form method="POST">
+  <div class="mb-2">
+    <label class="form-label">Name</label>
+    <input name="user_name" value="{{ booking['user_name'] }}" class="form-control" required>
+  </div>
+
+  <div class="mb-2">
+    <label class="form-label">Room</label>
+    <select name="room" class="form-select">
+      {% for r in rooms %}
+        <option value="{{ r }}" {% if booking['room']==r %}selected{% endif %}>{{ r }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="mb-2">
+    <label class="form-label">Date</label>
+    <input type="date" name="date" value="{{ booking['date'] }}" class="form-control" required>
+  </div>
+
+  <div class="mb-2">
+    <label class="form-label">Start Time</label>
+    <select name="start_time" class="form-select">
+      {% for t in times %}
+        <option value="{{ t }}" {% if booking['start_time']==t %}selected{% endif %}>{{ t }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="mb-2">
+    <label class="form-label">End Time</label>
+    <select name="end_time" class="form-select">
+      {% for t in times %}
+        <option value="{{ t }}" {% if booking['end_time']==t %}selected{% endif %}>{{ t }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="mb-2">
+    <label class="form-label">Number of People</label>
+    <input type="number" name="people" value="{{ booking['people'] }}" min="1" class="form-control" placeholder="e.g., 6">
+  </div>
+
+  <div class="mb-2">
+    <label class="form-label">Request Extra Devices such as speakers, projector, etc. (Optional)</label>
+    <input name="remark" value="{{ booking['remark'] }}" class="form-control" placeholder="List requested devices (if any)">
+    <small class="text-muted">
+      Note: All extra equipment requests are subject to availability. The admin team will inform you if any requested items are unavailable.
+    </small>
+  </div>
+
+  <button class="btn btn-primary">Update Booking</button>
+</form>
+{% endblock %}

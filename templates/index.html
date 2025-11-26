@@ -1,0 +1,244 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="row justify-content-center">
+
+  <!-- Booking Form -->
+  <div class="col-md-5">
+    <div class="card p-4">
+      <h3 class="fw-bold text-center mb-4">
+        <i class="fa-solid fa-calendar-days me-2 brand-icon"></i>
+        Meeting Room Booking Portal
+      </h3>
+
+      <form id="bookingForm" method="POST" action="{{ url_for('book') }}">
+
+        <div class="mb-3">
+          <label class="form-label">Booked By</label>
+          <input type="text" name="user_name" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Meeting Room</label>
+          <select name="room" class="form-select" required>
+            {% for r in rooms %}
+              <option value="{{ r }}">{{ r }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Date</label>
+          <input type="date" name="date" class="form-control" required>
+        </div>
+
+        <div class="row mb-3">
+          <div class="col">
+            <label class="form-label">Start Time</label>
+            <select name="start_time" class="form-select" required></select>
+          </div>
+          <div class="col">
+            <label class="form-label">End Time</label>
+            <select name="end_time" class="form-select" required></select>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Number of Participants</label>
+          <input type="number" name="people" min="1" class="form-control" placeholder="e.g., 8">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Additional Equipment (Optional)</label>
+          <input type="text" name="remark" class="form-control" placeholder="List requested devices (if any)">
+          <small class="text-muted">
+            Note: All extra equipment requests are subject to availability. The admin team will confirm.
+          </small>
+        </div>
+
+        <!-- Book Button opens T&C -->
+        <button type="button" id="bookNowBtn" class="btn btn-primary w-100">Book Now</button>
+        <button type="submit" id="realSubmit" class="d-none"></button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Booking List -->
+  <div class="col-md-7">
+    <div class="card p-4">
+      <h5 class="fw-bold mb-3">Booking Lists</h5>
+      <div class="table-responsive">
+        <table class="table align-middle table-sm">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Start</th>
+              <th>End</th>
+              <th>Meeting Room</th>
+              <th>Booked By</th>
+              <th>Pax</th>
+              <th>Devices</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for b in bookings %}
+            <tr>
+              <td>{{ b.date }}</td>
+              <td>{{ b.start_time }}</td>
+              <td>{{ b.end_time }}</td>
+              <td>{{ b.room }}</td>
+              <td>{{ b.user_name }}</td>
+              <td>{{ b.people or "-" }}</td>
+              <td>{{ b.remark or "-" }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="7" class="text-muted text-center">No bookings yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Terms & Conditions Modal -->
+<div class="modal fade" id="tcModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold">Terms & Conditions Agreement</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="p-3 border rounded" style="max-height: 45vh; overflow-y: auto;">
+          <h5 class="fw-bold">Meeting Room Booking – Terms & Conditions</h5>
+           <p><strong>1. Booking Requirement</strong><br>
+  Meeting rooms are reserved exclusively for users with a confirmed booking.<br>
+  Walk-ins or unreserved use is not allowed. Please check room availability and complete a proper booking before use.</p>
+
+  <p><strong>2. Cancellations</strong><br>
+  To cancel or modify a booking, please contact the Admin Team so the room can be made available to others.<br>
+  Self-service cancellation is currently unavailable.</p>
+
+  <p><strong>3. Eligibility</strong><br>
+  Only company staff members are permitted to book meeting rooms.<br>
+  Bookings made by unauthorized users may be cancelled without prior notice.</p>
+        </div>
+
+        <div class="form-check mt-3">
+          <input class="form-check-input" type="checkbox" id="agreeChk">
+          <label class="form-check-label fw-semibold" for="agreeChk">
+             I agree to the Meeting Room Booking Terms & Conditions.
+          </label>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button id="agreeBtn" class="btn btn-primary" disabled>Agree & Submit</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+/* ===== T&C Modal (unchanged) ===== */
+(function(){
+  const form = document.getElementById('bookingForm');
+  const bookBtn = document.getElementById('bookNowBtn');
+  const realSubmit = document.getElementById('realSubmit');
+  const modal = new bootstrap.Modal(document.getElementById('tcModal'));
+  const chk = document.getElementById('agreeChk');
+  const agreeBtn = document.getElementById('agreeBtn');
+
+  bookBtn.onclick = () => {
+    if (!form.reportValidity()) return;
+    chk.checked = false;
+    agreeBtn.disabled = true;
+    modal.show();
+  };
+  chk.onchange = () => agreeBtn.disabled = !chk.checked;
+  agreeBtn.onclick = () => { modal.hide(); setTimeout(() => realSubmit.click(), 150); };
+})();
+</script>
+
+<script>
+/* ===== Show all time slots but grey out & disable booked ones ===== */
+(function(){
+  const form = document.getElementById('bookingForm');
+  if (!form) return;
+
+  const selRoom  = form.querySelector('[name="room"]');
+  const inpDate  = form.querySelector('[name="date"]');
+  const selStart = form.querySelector('[name="start_time"]');
+  const selEnd   = form.querySelector('[name="end_time"]');
+
+  const pad = n => n.toString().padStart(2,'0');
+  const todayISO = () => { const d=new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
+
+  function genStarts(){ const out=[]; for(let m=9*60; m<17*60; m+=30){ out.push(`${pad(Math.floor(m/60))}:${pad(m%60)}`); } return out; }
+  function genEndsFrom(start){ const [h,m]=start.split(':').map(Number); const s=h*60+m; const out=[]; for(let e=s+30; e<=17*60; e+=30){ out.push(`${pad(Math.floor(e/60))}:${pad(e%60)}`); } return out; }
+
+  function renderSelectWithDisabled(selectEl, allValues, enabledValues){
+    const enabled = new Set(enabledValues || []);
+    const prev = selectEl.value;
+    selectEl.innerHTML = "";
+    allValues.forEach(v=>{
+      const opt = document.createElement('option');
+      opt.value = v; opt.textContent = v;
+      if (!enabled.has(v)) opt.disabled = true;
+      selectEl.appendChild(opt);
+    });
+    if (enabled.has(prev)) selectEl.value = prev;
+    else { const firstEnabled = allValues.find(v => enabled.has(v)); selectEl.value = firstEnabled || ""; }
+    selectEl.disabled = (enabledValues || []).length === 0;
+  }
+
+  async function fetchJSON(url){
+    try{ const r = await fetch(url, { cache:'no-store' }); if(!r.ok) return null; return await r.json(); }
+    catch(e){ return null; }
+  }
+
+  async function refreshStarts(){
+    if (!inpDate.value) inpDate.value = todayISO();
+    if (!selRoom.value || !inpDate.value) return;
+    const url = `/api/available_times?room=${encodeURIComponent(selRoom.value)}&date=${encodeURIComponent(inpDate.value)}`;
+    const data = await fetchJSON(url);
+    const allStarts = genStarts();
+    const enabledStarts = (data && data.ok && Array.isArray(data.starts)) ? data.starts : allStarts;
+    renderSelectWithDisabled(selStart, allStarts, enabledStarts);
+    await refreshEnds();
+  }
+
+  async function refreshEnds(){
+    const start = selStart.value;
+    if (!selRoom.value || !inpDate.value || !start) { renderSelectWithDisabled(selEnd, [], []); return; }
+    const url = `/api/available_times?room=${encodeURIComponent(selRoom.value)}&date=${encodeURIComponent(inpDate.value)}&start=${encodeURIComponent(start)}`;
+    const data = await fetchJSON(url);
+    const allEnds = genEndsFrom(start);
+    const enabledEnds = (data && data.ok && Array.isArray(data.ends)) ? data.ends : allEnds;
+    renderSelectWithDisabled(selEnd, allEnds, enabledEnds);
+  }
+
+  selRoom.addEventListener('change', refreshStarts);
+  inpDate.addEventListener('change', refreshStarts);
+  selStart.addEventListener('change', refreshEnds);
+
+  if (!selRoom.value && selRoom.options.length) selRoom.value = selRoom.options[0].value;
+  if (!inpDate.value) inpDate.value = todayISO();
+  refreshStarts();
+})();
+</script>
+
+<style>
+select option[disabled] { color: #adb5bd !important; }
+select:disabled { background-color: #f8f9fa; }
+</style>
+{% endblock %}

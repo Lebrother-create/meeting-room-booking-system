@@ -1,0 +1,56 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="d-flex justify-content-between mb-3">
+  <h3>Archived Bookings (History)</h3>
+  <a class="btn btn-secondary" href="{{ url_for('admin_dashboard') }}">Back to Dashboard</a>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-striped align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Archived At</th>
+            <th>Date</th>
+            <th>Start</th>
+            <th>End</th>
+            <th>Room</th>
+            <th>User</th>
+            <th>People</th>
+            <th>Remark</th>
+            <th class="text-center">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for b in bookings %}
+          <tr>
+            <td>{{ b['archived_at'] }}</td>
+            <td>{{ b['date'] }}</td>
+            <td>{{ b['start_time'] }}</td>
+            <td>{{ b['end_time'] }}</td>
+            <td>{{ b['room'] }}</td>
+            <td>{{ b['user_name'] }}</td>
+            <td>{{ b['people'] or '-' }}</td>
+            <td>{{ b['remark'] or '-' }}</td>
+            <td class="text-center">
+              <form method="POST"
+                    action="{{ url_for('admin_delete_history', history_id=b['id']) }}"
+                    onsubmit="return confirm('Are you sure you want to delete this history record? This cannot be undone.');">
+                <button class="btn btn-sm btn-danger">
+                  <i class="fa-solid fa-trash-can me-1"></i> Delete
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="9" class="text-muted text-center">No history yet.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

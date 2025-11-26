@@ -1,0 +1,46 @@
+{% extends "layout.html" %}
+{% block content %}
+<h3 class="mb-3">Admin Dashboard</h3>
+
+<div class="mb-3">
+  <a href="{{ url_for('admin_add') }}" class="btn btn-success btn-sm">Add Booking</a>
+  <a href="{{ url_for('admin_rooms') }}" class="btn btn-warning btn-sm">Manage Rooms</a>
+  <a href="{{ url_for('admin_history') }}" class="btn btn-info btn-sm">View History</a>
+</div>
+
+<table class="table table-striped align-middle">
+  <thead class="table-light">
+    <tr>
+      <th>Date</th>
+      <th>Start</th>
+      <th>End</th>
+      <th>Room</th>
+      <th>User</th>
+      <th>People</th>
+      <th>Devices</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for b in bookings %}
+    <tr>
+      <td>{{ b['date'] }}</td>
+      <td>{{ b['start_time'] }}</td>
+      <td>{{ b['end_time'] }}</td>
+      <td>{{ b['room'] }}</td>
+      <td>{{ b['user_name'] }}</td>
+      <td>{{ b['people'] or '-' }}</td>
+      <td>{{ b['remark'] or '-' }}</td>
+      <td>
+        <a href="{{ url_for('admin_edit', booking_id=b['id']) }}" class="btn btn-primary btn-sm">Edit</a>
+       <form method="POST" action="{{ url_for('admin_delete', booking_id=b['id']) }}" style="display:inline;" onsubmit="return confirm('Delete this booking?');">
+  <button class="btn btn-primary btn-sm">Delete</button>
+</form>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="8" class="text-muted">No bookings found.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

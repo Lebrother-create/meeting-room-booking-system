@@ -1,0 +1,59 @@
+{% extends "layout.html" %}
+{% block content %}
+<h3 class="mb-3">Add Booking</h3>
+
+<form method="POST">
+  <div class="mb-3">
+    <label class="form-label">User Name</label>
+    <input name="user_name" class="form-control" placeholder="Enter your name" required>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Room</label>
+    <select name="room" class="form-select" required>
+      {% for r in rooms %}
+      <option value="{{ r }}">{{ r }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Date</label>
+    <input type="date" name="date" class="form-control" required>
+  </div>
+
+  <div class="row mb-3">
+    <div class="col">
+      <label class="form-label">Start Time</label>
+      <select name="start_time" class="form-select" required>
+        {% for t in times %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col">
+      <label class="form-label">End Time</label>
+      <select name="end_time" class="form-select" required>
+        {% for t in times %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+      </select>
+    </div>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Number of People</label>
+    <input type="number" name="people" class="form-control" min="1" placeholder="e.g. 5">
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Request Extra Devices / Remarks</label>
+    <textarea name="remark" class="form-control" rows="2"
+      placeholder="Request extra devices such as speakers, projector, etc. (Optional)"></textarea>
+    <small class="form-text text-muted">
+      Note: All extra equipment requests are subject to availability. The admin team will inform you if any requested items are unavailable.
+    </small>
+  </div>
+
+  <div class="mt-3">
+    <button class="btn btn-success">Save Booking</button>
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">Cancel</a>
+  </div>
+</form>
+{% endblock %}
